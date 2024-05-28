@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Chatbot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('grace-100-new.jpeg'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff; 
+        }
+        .container {
+            max-width: 80%;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.6); 
+            border-radius: 20px;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); 
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input[type="text"] {
+            padding: 12px;
+            width: 100%;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.8); 
+            color: #333; 
+        }
+        input[type="submit"] {
+            padding: 12px 20px;
+            background-color: #FFA500; 
+            color: #fff; 
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #FF8C00; 
+        }
+        .recipe {
+            background-color: rgba(255, 255, 255, 0.9); 
+            border-radius: 20px; 
+            padding: 20px;
+            margin-top: 20px;
+            display: none; 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        .recipe.show {
+            display: block; 
+        }
+        .recipe h2 {
+            color: #084B8A;
+            margin-bottom: 10px;
+        }
+        .recipe h3 {
+            color: #084B8A;
+            margin-bottom: 10px;
+        }
+        .recipe p {
+            color: #333333;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Grace's Recipe Chatbot</h1>
+        <form id="recipeForm">
+            <input type="text" id="query" placeholder="Enter your recipe query">
+            <input type="submit" value="Search">
+        </form>
+        <div id="recipeResult" class="recipe">
+            <h2 id="recipeTitle"></h2>
+            <div id="recipeIngredients"></div>
+            <div id="recipeInstructions"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("recipeForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let query = document.getElementById("query").value;
+            fetchRecipe(query);
+        });
+
+        function fetchRecipe(query) {
+            let endpoint = 'https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/search';
+            let apiKey = '69d967ff3dmsh612924bcf48afb0p127396jsnd143aafb86e9';
+
+            fetch(endpoint + '?query=' + query, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': apiKey,
+                    'X-RapidAPI-Host': 'spoonacular-recipe-food-nutrition-v1.p.rapidapi.com'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    let recipeId = data.results[0].id;
+                    fetchRecipeDetails(recipeId);
+                } else {
+                    displayError();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching recipe:', error);
+                displayError();
+            });
+        }
+
+        function fetchRecipeDetails(recipeId) {
+            let endpoint = `https://spoonacular-recipe-food-nutrition-v1.p.rapidapi.com/recipes/${recipeId}/information`;
+            let apiKey = '69d967ff3dmsh612924bcf48afb0p127396jsnd143aafb86e9';
+
+            fetch(endpoint, {
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': apiKey,
+                    'X-RapidAPI-Host': 'spoonacular-recipe-food-nutrition-v1.p.rapidapi.com'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayRecipe(data.title, data.extendedIngredients.map(ingredient => ingredient.original), data.instructions);
+            })
+            .catch(error => {
+                console.error('Error fetching recipe details:', error);
+                displayError();
+            });
+        }
+
+        function displayRecipe(title, ingredients, instructions) {
+            document.getElementById("recipeTitle").textContent = title;
+            document.getElementById("recipeIngredients").innerHTML = "<h3>Ingredients:</h3>" + ingredients.map(ingredient => "<p>" + ingredient + "</p>").join("");
+            document.getElementById("recipeInstructions").innerHTML = "<h3>Instructions:</h3><p>" + instructions + "</p>";
+            document.getElementById("recipeResult").classList.add("show");
+        }
+
+        function displayError() {
+            document.getElementById("recipeResult").innerHTML = "<p>No recipe found for that query.</p>";
+            document.getElementById("recipeResult").classList.remove("show");
+        }
+    </script>
+</body>
+</html>
+
+
+
